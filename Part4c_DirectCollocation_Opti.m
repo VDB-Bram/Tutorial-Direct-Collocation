@@ -17,7 +17,8 @@ q_exp = data.data(:,2);
 m  = 2.318;
 lc = 0.2368;
 g  = 9.81;
-I  = m*lc*lc;
+RG = lc*0.416;   % Radius of gyration (Winter 2009)
+I  = m*RG*RG + m*lc*lc;
 
 %% Load Casadi and linear solver
 %addpath('C:\software\linear_solver');
