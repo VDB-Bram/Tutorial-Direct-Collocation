@@ -1,9 +1,9 @@
-function [qdot] = qdotfunctie_shooting (t_span,q_init, params)
+function [qdot] = qdotfunction (t_span,q_init, params)
 
 % Input 
 m  = params.m;
 g  = params.g;
-lc = params.lc;
+lc  = params.lc;
 I  = params.I; 
 Tb = params.Tb;
 B  = params.B;

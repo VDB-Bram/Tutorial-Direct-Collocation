@@ -1,18 +1,18 @@
-%% OptimalisatieParametersPendulumJente
+%% Direct Collocation - Casadi - Opti 
 clear all
 clc
 close all
-%% Load data
-% Experimental Data
+
+% Input
 data  = load('DataPendulum.mat');
 t_exp = data.data(:,1);
 q_exp = data.data(:,2)*pi/180;
 
-% Input parameters
-m = 2.3351;
+m  = 2.3351;
 lc = 0.2367;
-g  = 9.81; 
-I  = m*lc*lc;
+gv  = 9.81; 
+RG = lc*0.416;          % Radius of gyration (Winter 2009)
+I  = m*RG*RG + m*lc*lc;
 
 %% Load Casadi and linear solver
 addpath('C:\software\linear_solver');   
@@ -20,12 +20,10 @@ Casadi = 'C:\software\Casadi'; addpath(genpath(Casadi));
 import casadi.*;
 
 %% Time information for mesh- and collocation points
-
 dt     = 0.01; % time between mesh points 
 t_mesh = t_exp(1):dt:t_exp(end)+dt; 
 N      = length(t_mesh)-1; % number of mesh points
 t_coll = linspace(t_mesh(1),t_mesh(end),N*3);
-
 
 qspline              = spline(t_exp,q_exp);
 % q_exp at meshpoints
@@ -34,7 +32,6 @@ qspline              = spline(t_exp,q_exp);
 [qcollExp qdcollExp] = SplineEval_ppuval(qspline,t_coll,1);
     
 %% Ipopt options
-
 options.ipopt.tol = 1*10^(-6);
 options.ipopt.linear_solver = 'mumps';
 options.ipopt.hessian_approximation = 'limited-memory';
@@ -77,8 +74,8 @@ opti = casadi.Opti();
  
 % States
     % Bounds
-    Bounds.q        = [-10 10];
-    Bounds.qdot     = [-100 100];
+    Bounds.q        = [-300 300];
+    Bounds.qdot     = [-300 300];
 
     % Mesh points
     q    = opti.variable(1,N+1);
@@ -102,8 +99,8 @@ opti = casadi.Opti();
     
 % Controls 
     % Bounds 
-    Bounds.uDamp    = [0.01 1];
-    Bounds.uTb      = [-10 10];
+    Bounds.uDamp    = [0.01 10];
+    Bounds.uTb      = [0 10];
         
     uDamp           = opti.variable(1,1);
     opti.subject_to(Bounds.uDamp(1) < uDamp < Bounds.uDamp(2));
@@ -112,7 +109,7 @@ opti = casadi.Opti();
     opti.subject_to(Bounds.uTb(1) < uTb < Bounds.uTb(2));
        
     % Initial guess
-    opti.set_initial(uDamp,0);
+    opti.set_initial(uDamp,0.01);
     opti.set_initial(uTb,0);
   
 % Bounds on initial state
@@ -140,7 +137,7 @@ opti = casadi.Opti();
         end
         
         % Skeleton dynamics 
-        opti.subject_to(qdds == (-m*g*lc*cos(qs)- uDamp*qds + uTb)./I);
+        opti.subject_to(qdds == (-m*gv*lc*cos(qs)- uDamp*qds + uTb)./I);
                
         % state continuity at mesh transition
         opti.subject_to(q(k+1) - qs_coll*D == 0);
@@ -164,11 +161,13 @@ qdsol       = sol.value(qd)';
 uDampsol    = sol.value(uDamp)
 uTbsol      = sol.value(uTb)
     
-%% Plot results
-      
+%% Plot results  
 figure()
 plot(t_mesh,qsol)
 hold on
 plot(t_mesh,qmeshExp,'--k')
 hold on
-legend({'q sol','q exp'})
+legend({'Q: Simulated','Q: Experimental'})
+xlabel('Time [s]'); 
+ylabel('Angle [rad]');
+title('DC - Casadi+Opti: optimized Tb and B ')

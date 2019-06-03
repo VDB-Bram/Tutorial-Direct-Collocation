@@ -1,6 +1,6 @@
 function [f_out] = myobj_DC(z,params,t)
 
-%MYOBJ is the function dat you want to minimize 
+%MYOBJ is the function you want to minimize 
 
 %Input 
 q       = z(3:2+params.N);
