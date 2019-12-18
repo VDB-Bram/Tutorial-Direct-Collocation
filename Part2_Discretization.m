@@ -26,7 +26,7 @@ qdot0  = 0;
 q_init = [q0 qdot0];
     
 % Time info
-dt       = 0.0001;                  % time step for backward euler
+dt       = 0.01;                  % time step for backward euler
 t_end    = 10;                      % final simulation time
 t_vect   = 0:dt:t_end;              % vector with all the time steps
 qt_store = nan(length(t_vect),2);   % pre-allocate matrix with predicted states (computation speed)
@@ -55,15 +55,15 @@ end
 
 % plot the predicted angle and angular velocity
 figure();
+lw = 2;     % linewidth
 subplot(1,2,1);
-plot(t_vect,qt_store(:,1));xlabel('Time [s]'); ylabel('Angle [rad]');
+plot(t_vect,qt_store(:,1),'LineWidth',lw);xlabel('Time [s]'); ylabel('Angle [rad]');
 hold on 
-legend({'Q: simulated'})
 title('Forward simulation of knee angle')
 subplot(1,2,2);
-plot(t_vect,qt_store(:,2)); xlabel('Time [s]'); ylabel('Angular velocity [rad/s]');
+plot(t_vect,qt_store(:,2),'LineWidth',lw); xlabel('Time [s]'); ylabel('Angular velocity [rad/s]');
 hold on 
-legend({'Qdot: simulated'})
+legend({'time marching'})
 title('Forward simulation of knee angular velocity')
 
 %% Part 2B: Implicit (fsolve)
@@ -72,6 +72,7 @@ q0     = q_exp(1);
 qdot0  = 0;
 q_init = [q0 qdot0];
 
+% parameters
 params.m  = m;
 params.lc = lc;
 params.g  = 9.81;
@@ -79,19 +80,26 @@ params.I  = I;
 params.Tb = Tb;
 params.B  = B;
 
+% time vector
 dt       = 0.01;                  % time step for backward euler
 t_end    = 10;                      % final simulation time
 t_vect   = 0:dt:t_end;  
 
+% pre-allocate states
 x0 = zeros(length(t_vect),2);
 
-F_handle = @(x)mycon_fsolve(x,dt,q_init,params)
+% solve set of equations using fsolve matlab
+F_handle = @(x)mycon_fsolve(x,dt,q_init,params);
 x = fsolve(F_handle,x0);
 q = x(:,1);
 qdot = x(:,2);
 
-figure()
-plot(t_vect,q)
+subplot(1,2,1);
+plot(t_vect,q,'--r','LineWidth',lw)
+
+subplot(1,2,2);
+plot(t_vect,qdot,'--r','LineWidth',lw)
+legend({'time marching','fsolve'})
 
 %% part 2C: Ode 
 
@@ -101,10 +109,7 @@ qdot0 = 0;
 q_init = [q0 qdot0]';
 
 % Time info
-dt       = 0.0001;                  % time step for backward euler
-t_end    = 10;                      % final simulation time
-t_vect   = 0:dt:t_end;              % vector with all the time steps
-t_span   = t_vect;
+t_span   = [0 t_end];    % time interval for ode
 
 params.m  = m;
 params.g  = gv;
@@ -113,13 +118,16 @@ params.I  = I;
 params.Tb = Tb;
 params.B  = B;
  
-options = odeset('InitialStep',0.01,'MaxStep',0.01);
+% some options for the ode soler
+options = odeset('InitialStep',0.0001,'MaxStep',0.01);
 
 % Ode
-[tM,qM] = ode23(@qdotfunctie_discretization, t_span, q_init,options, params);
+[tM,qM] = ode23(@StateDerivative, t_span, q_init,options, params);
 
-figure()
-plot(tM,qM(:,1))
-xlabel('Time [s]'); 
-ylabel('Angle [rad]');
-legend({'Q: simulated'})
+% add this to the figure
+subplot(1,2,1);
+plot(t_vect,q,'g','LineWidth',lw/4)
+
+subplot(1,2,2);
+plot(t_vect,qdot,'g','LineWidth',lw/4)
+legend({'time marching','fsolve','ode23'})

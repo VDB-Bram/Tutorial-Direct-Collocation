@@ -203,20 +203,21 @@ and a delayed sensory feedback torque to simulate reflex activity (Figure \ref{F
 %Our model consists of a planar lower leg segment actuated with a passive torque representing non-contractile musculotendon properties, Tpas, and an active torque representing muscle contractile behavior, Tact. 
 Let us first consider a healthy subject in which reflex activity is absent. In that case, only gravity, damping and a constant baseline tone act on the lower leg. Knee joint motion is described by the equation of motion of the planar lower leg segment under the assumption that the knee joint center is stationary during the test:
 \begin{equation}
-% J \ddot{\theta} = m g l_c cos(\theta) - T_b - B \dot{\theta},
-J \frac{d^2\theta(t)}{dt^2} = m g l_c cos\theta(t) - T_b - B \frac{d\theta(t)}{dt},
+% I \ddot{\theta} = m g l_c cos(\theta) - T_b - B \dot{\theta},
+I \frac{d^2\theta(t)}{dt^2} = m g l_c cos\theta(t) - T_b - B \frac{d\theta(t)}{dt},
 \label{eqofmot}
 \end{equation}
-where $t$ is time, $\theta$ is the knee joint angle ($\theta = 0$ corresponds to full extension and negative values correspond to knee flexion), $J$ is the moment of inertia of the lower leg with respect to the knee, $m$ is the mass of the lower leg, $g$ is gravitational acceleration, and $l_c$ is the distance between the knee joint center and the center of mass of the lower leg (Figure xx). 
+where $t$ is time, $\theta$ is the knee joint angle ($\theta = 0$ corresponds to full extension and negative values correspond to knee flexion), $I$ is the moment of inertia of the lower leg with respect to the knee, $m$ is the mass of the lower leg, $g$ is gravitational acceleration, and $l_c$ is the distance between the knee joint center and the center of mass of the lower leg (Figure xx). 
 % Note that we use $\dot{\theta}$ and $\ddot{\theta}$ as short notations for respectively $\frac{d\theta}{dt}$ and $\frac{d^2\theta}{dt^2}$.
 
 The movement of the lower leg is described by a second order differential equation (\ref{eqofmot}), i.e., the second (but not the third or any higher) derivative of the knee angle with respect to time appears in the equation. Hence, the movement of the lower leg can be described by two states: knee joint angle $\theta$ and knee joint angular velocity $\dot{\theta}$, where $\dot{\theta}$ is short notation for $\frac{d\theta}{dt}$. And based on (\ref{eqofmot}) we can write explicit equations for the state derivatives:
 \begin{eqnarray}
 % J \ddot{\theta} = m g l_c cos(\theta) - T_b - B \dot{\theta},
 \frac{d\theta(t)}{dt} & = & \dot{\theta}(t), \label{eqofmot1}\\
-\frac{d \dot{\theta}(t)}{dt} & = &\frac{1}{J} \left( m g l_c cos\theta(t) - T_b - B \dot{\theta}(t) \right).
+\frac{d \dot{\theta}(t)}{dt} & = &\frac{1}{I} \left( m g l_c cos\theta(t) - T_b - B \dot{\theta}(t) \right).
 \label{eqofmot2}
 \end{eqnarray}
+
 
 \chapter{Forward simulations}
 
@@ -233,27 +234,28 @@ Next, we approximate the exact time derivatives by numerical derivatives. Using 
 Using these approximations for the derivatives, we can now discretize the dynamic equations \ref{eqofmot1}-\ref{eqofmot2}:
 \begin{eqnarray}
 \frac{\theta_{i+1} - \theta_{i}}{\Delta t} & = & \dot{\theta_i}, \\
-\frac{\dot\theta_{i+1} - \dot\theta_{i}}{\Delta t} & = &\frac{1}{J} \left( m g l_c cos\theta_i - T_b - B \dot{\theta}_i \right).
+\frac{\dot\theta_{i+1} - \dot\theta_{i}}{\Delta t} & = &\frac{1}{I} \left( m g l_c cos\theta_i - T_b - B \dot{\theta}_i \right).
 \label{discseteqofmot}
 \end{eqnarray}
 We can solve these equations for $\theta_{i+1}$ and $\dot\theta_{i+1}$:
 \begin{eqnarray}
 \theta_{i+1} & = & \theta_{i} + \dot{\theta_i} \Delta t , \label{expdisceqofmot1}\\
-\dot\theta_{i+1} & = & \dot\theta_{i} + \frac{\Delta t}{J} \left( m g l_c cos\theta_i - T_b - B \dot{\theta}_i \right).
+\dot\theta_{i+1} & = & \dot\theta_{i} + \frac{\Delta t}{I} \left( m g l_c cos\theta_i - T_b - B \dot{\theta}_i \right).
 \label{expdisceqofmot2}
 \end{eqnarray}
 Starting from the given initial states $\theta_0$ and $\dot{\theta}_0$, we can iteratively solve equations \ref{expdisceqofmot1}-\ref{expdisceqofmot2} to find the states at times $1 \ldots N$. Such procedure for numerical integration is often referred to as time marching, since the discrete states at consecutive time instants are iteratively computed. For an implementation, see Part2\_Discretization.m (section Part 2A).
 
-The use of variable instead of fixed time steps and more accurate discretization schemes than backward Euler can improve numerical accuracy of the integration. Matlab provides different solvers for numerical integration of ordinary differential equations (e.g., equations \ref{eqofmot1}-\ref{eqofmot2}). For an example implementation using ode23, see Part2\_Discretization.m (section Part 2B).
+The use of variable instead of fixed time steps and more accurate discretization schemes than backward Euler can improve numerical accuracy of the integration. Matlab provides different solvers for numerical integration of ordinary differential equations (e.g., equations \ref{eqofmot1}-\ref{eqofmot2}). For an example implementation using ode23, see Part2\_Discretization.m (section Part 2C).
 
 Alternatively, we can insert the approximations for the derivatives directly in equation \ref{eqofmot} after bringing all the terms to the left hand side of the equation:
 \begin{equation}
-J \frac{\dot\theta_{i+1} - \dot\theta_{i}}{\Delta t} - m g l_c cos\theta(t) + T_b + B \frac{\theta_{i+1} - \theta_{i}}{\Delta t} = 0.
+I \frac{\dot\theta_{i+1} - \dot\theta_{i}}{\Delta t} - m g l_c cos\theta(t) + T_b + B \frac{\theta_{i+1} - \theta_{i}}{\Delta t} = 0.
 \label{disceqofmot}
 \end{equation}
 Equations \ref{expdisceqofmot1} and \ref{disceqofmot} for $i = 1 \ldots N$ form a set of equations that can be solve numerically, e.g. by using fsolve in matlab, for $\theta_i$ and $\dot{\theta}_i$ if the initial states $\theta_0$ and $\dot{\theta}_0$ are known.  
-For an implementation, see Part2\_Discretization.m (section Part 2C).
+For an implementation, see Part2\_Discretization.m (section Part 2B).
 As opposed to time marching forward integration, here all discrete states are simultaneously computed. % Maybe note on numerical condition. 
+
 
 \chapter{Controller}
 
@@ -283,11 +285,20 @@ In contrast to shooting methods, direct collocation methods do not rely on time-
 
 For an example implementation using Matlab's fmincon see Part4a\_DirectCollocation  \_Fmincon.m. By exploiting sparsity and by using algorithmic differentiation, numerical efficiency can be improved. For example implementations using CasADi (www.casadi.org) see Part4b\_DirectCollocation\_Casadi.m and Part4a\_DirectCollocation\_Casadi\_Opti.m.
 
+
+\chapter{Hands-on tutorial}
+
+
+% Part_Input.m
+% explain pendulum test with figure
+
+% Part2_Discretization
+
+
 \begin{thebibliography}{9}
 \bibitem{degroote2018} 
 De Groote, F., Blum, K.B., Horslen, B.C., Ting, L.H. Interaction between muscle tone, short-range stiffness and increased sensory feedback gains explains key kinematic features of the pendulum test in spastic cerebral palsy: A simulation study. 
 \textit{PLoS ONE}, 13(10):e0205763, 2018. 
-
 \end{thebibliography}
 
 \end{document}

@@ -1,4 +1,4 @@
-function [qdot] = qdotfunction_controller (t_span,q_init, params, q_exp, qdot_exp)
+function [qdot] = qdotfunction_controller(t_span,q_init, params, q_exp, qdot_exp)
 
 % Input 
 m  = params.m;
