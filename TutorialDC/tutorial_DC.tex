@@ -28,6 +28,7 @@ openright, % Each chapter will start on a recto page.
 
 % \usepackage{tikz} % Figures
 \usepackage{graphicx} % Include figures
+\usepackage{url}
 
 %%% PAGE LAYOUT 
 %%%------------------------------------------------------------------------------
@@ -257,9 +258,9 @@ For an implementation, see Part2\_Discretization.m (section Part 2C).
 As opposed to time marching forward integration, here all discrete states are simultaneously computed. % Maybe note on numerical condition. 
 
 
-\chapter{Controller}
+%\chapter{Controller}
 
-To do.
+%To do.
 
 \chapter{Optimal parameter estimation and optimal control}
 
@@ -275,7 +276,7 @@ where $\theta_i$ and $\hat{\theta}_i$ are respectively simulated and experimenta
 
 Shooting methods evaluate the cost function $J$ by using time marching forward integration to solve for $\theta_i$. Gradient based optimization methods typically require many function evaluations to obtain derivative information through finite differences. Hence, in every iteration of the optimization algorithm the dynamics are evaluated multiple times through forward integration. 
 
-To obtain accurate approximations of the derivatives through finite differences, it is important that the same numerical operations are performed when evaluating $J(p)$ and $J(p+\Delta p)$. In this case, this means that the discretization scheme used by the integrator should be the same. For an example implementation using Matlab's fmincon see Part4\_Shooting\_Fmincon.m.
+To obtain accurate approximations of the derivatives through finite differences, it is important that the same numerical operations are performed when evaluating $J(p)$ and $J(p+\Delta p)$. In this case, this means that the discretization scheme used by the integrator should be the same. For an example implementation using Matlab's fmincon see Part4a\_Shooting\_Fmincon.m.
 
 Shooting methods are not very well suited for systems with stiff dynamics, where the simulated state trajectories have a high sensitivity to the optimization variables. Typically, this sensitivity increases with simulation time.
 
@@ -283,10 +284,21 @@ Shooting methods are not very well suited for systems with stiff dynamics, where
 
 In contrast to shooting methods, direct collocation methods do not rely on time-marching to evaluate the dynamics. Instead, the discretized states are considered as additional optimization variables and the discretized state equations \ref{expdisceqofmot1} and \ref{disceqofmot} are imposed as constraints. This results in a non-linear programming problem with a large number of optimization variables and constraints as compared to direct shooting. However, the sparsity of the resulting optimization problems makes them tractable. By reducing the sensitivity of the cost function to the optimization variables, direct collocation methods are often numerically more efficient than shooting methods. Note that the dynamic equations do not need to be satisfied in every iteration of the optimization algorithm when using direct collocation. 
 
-For an example implementation using Matlab's fmincon see Part4a\_DirectCollocation  \_Fmincon.m. By exploiting sparsity and by using algorithmic differentiation, numerical efficiency can be improved. For example implementations using CasADi (www.casadi.org) see Part4b\_DirectCollocation\_Casadi.m and Part4a\_DirectCollocation\_Casadi\_Opti.m.
+For an example implementation using Matlab's fmincon see Part4b\_DirectCollocation  \_Fmincon.m. By exploiting sparsity and by using algorithmic differentiation, numerical efficiency can be improved. For example implementations using CasADi (www.casadi.org) see Part4c\_DirectCollocation\_Casadi\_Opti.m.
 
 
 \chapter{Hands-on tutorial}
+
+ToDo
+
+
+\section{Software}
+You need to install casadi if you want to run all the examples. CasADi is a tool for nonlinear optimization and algorithmic differentiation. Please install casadi by downloading the binary ad add the folder to your matlab path (\url{https://web.casadi.org/get/}).
+
+\section{Matlab script}
+
+You can find all the instructions in the matlab scripts (Part1-Part4).
+
 
 
 % Part_Input.m

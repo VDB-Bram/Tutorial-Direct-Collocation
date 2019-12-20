@@ -1,4 +1,11 @@
 
+%% Part4c: direct collocation using Casadi
+
+% Here we also use a direct collocation approach to solve the optimization
+% problem, but we use casadi (and opti) to formulate and solve the
+% nonlinear program (NLP). The main advantage of casadi is that is exploits sparsity 
+% and uses algorithmic differentation.
+
 %% Load pendulum properties (see Part1_Input.m for more information)
 
 clear all;
@@ -38,9 +45,14 @@ qspline = spline(t_exp,q_exp);  % spline fit
 import casadi.*;
 
 % Initialise opti structure
+% Opti is an compact syntax to define NLP's (Non-linear programs). You can
+% find more information here: https://web.casadi.org/blog/opti/. You'll see
+% that this is very user friendly. You can also use the default casadi
+% syntax (see old/Part4c_DirectCollocation_Casadi.m).
+
 opti = casadi.Opti();
 
-% Discretized states
+% Discretized states (create variables in opti)
 q 	= opti.variable(1,N);
 qd 	= opti.variable(1,N);
 
@@ -48,26 +60,26 @@ qd 	= opti.variable(1,N);
 Tb  = opti.variable(1);
 B   = opti.variable(1);
 
-% bounds  
+% bounds (use opti.subject_to to define bounds on the variables)  
 opti.subject_to(-10 < Tb < 10);			% bound on baseline torque
 opti.subject_to(-10 < B < 10);			% bound on damping coefficient
 opti.subject_to(-4*pi < q <4*pi);	% bound on joint angles
 opti.subject_to(-300 < qd < 300);		% bound on angular velocites
 
-% bound on initial state
+% bound on initial state (equality constraint on initial state)
 opti.subject_to(q(1)  == x0(1));
 opti.subject_to(qd(1) == x0(2));
 
-% guess
+% set the guess for the variables (based on experimental data)
 opti.set_initial(q, q_exp);
 opti.set_initial(qd,qdot_exp);
 opti.set_initial(Tb, 0);
 opti.set_initial(B, 0);
 
-
 %--------------------------
 % using vector formulation
 %--------------------------
+% this is much faster (but a bit harder to understand)
 
 % IP dynamics
 qdd = (-m*g*lc*cos(q))/I - Tb/I -B*qd/I ; 	
@@ -77,9 +89,9 @@ opti.subject_to(qd(1:N-1)*dt +q(1:N-1) == q(2:N));
 opti.subject_to(qdd(1:N-1)*dt +qd(1:N-1) == qd(2:N));
 
 % -------------------------------------
-% using for loop (easier to understand)
+% formulate NLP using for loop 
 %--------------------------------------
-% 
+% % this is easier to understand (but much slower !)
 % for i = 1:N-1
 % 	% select state
 % 	qs = q(i);

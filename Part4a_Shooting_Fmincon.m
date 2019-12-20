@@ -6,8 +6,10 @@
 clear all; 
 
 %% add functions to the matlab path
-addpath(fullfile(pwd,'functions'));
 
+% this path contains the function "myobj_shooting" that is used to evaluate
+% the objective function
+addpath(fullfile(pwd,'functions'));
 
 %% Load pendulum properties (see Part1_Input.m for more information)
 
@@ -35,11 +37,11 @@ x0 = [q_exp(1); 0];  % [joint angle initial frame  -  zero velocity ]
 
 %% Optimization
     
-% Optimization of Tb,B to minimize the difference between predicted
-% and experimental values 
+% The goal is to optimize Tb and B to minimize the difference between predicted
+% and experimental joint angle.
 
 % initial guess of the optimization parameters
-ig = [0 0];               % Tb B 
+ig = [0 0];               % Tb B (naive guess)
 
 % upper and lower bounds on the optimization parameters
 lb = [-10 -10] ;     % upper bound Tb B 
@@ -48,9 +50,9 @@ ub = [10  10] ;      % lowe rbound Tb B
 % define integration scheme for the forward simulation
 dt      = 0.005;                    % time step
 tvect   = t_span(1):dt:t_span(2);   % time vector
-N       = length(tvect);
+N       = length(tvect);            % number of steps
 
-%  interpolate experimenatal data at discr. time using spline
+%  interpolate experimenatal data at discrete time using spline
 qspline = spline(t_exp,q_exp);  % spline fit
 [q_exp,qdot_exp] = SplineEval_ppuval(qspline,tvect,1); % get angles and velocities
 

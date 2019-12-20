@@ -1,11 +1,9 @@
 \BOOKMARK [0][-]{chapter.1}{Dynamics of the pendulum test}{}% 1
-\BOOKMARK [1][-]{section.1.1}{Theory}{chapter.1}% 2
-\BOOKMARK [1][-]{section.1.2}{matlab example}{chapter.1}% 3
-\BOOKMARK [0][-]{chapter.2}{Forward simulations}{}% 4
-\BOOKMARK [1][-]{section.2.1}{Theory}{chapter.2}% 5
-\BOOKMARK [1][-]{section.2.2}{Matlab example}{chapter.2}% 6
-\BOOKMARK [0][-]{chapter.3}{Controller}{}% 7
-\BOOKMARK [0][-]{chapter.4}{Optimal parameter estimation and optimal control}{}% 8
-\BOOKMARK [1][-]{section.4.1}{Direct shooting}{chapter.4}% 9
-\BOOKMARK [1][-]{section.4.2}{Direct collocation}{chapter.4}% 10
-\BOOKMARK [0][-]{chapter*.2}{Bibliography}{}% 11
+\BOOKMARK [0][-]{chapter.2}{Forward simulations}{}% 2
+\BOOKMARK [0][-]{chapter.3}{Optimal parameter estimation and optimal control}{}% 3
+\BOOKMARK [1][-]{section.3.1}{Direct shooting}{chapter.3}% 4
+\BOOKMARK [1][-]{section.3.2}{Direct collocation}{chapter.3}% 5
+\BOOKMARK [0][-]{chapter.4}{Hands-on tutorial}{}% 6
+\BOOKMARK [1][-]{section.4.1}{Software}{chapter.4}% 7
+\BOOKMARK [1][-]{section.4.2}{Matlab script}{chapter.4}% 8
+\BOOKMARK [0][-]{chapter*.2}{Bibliography}{}% 9

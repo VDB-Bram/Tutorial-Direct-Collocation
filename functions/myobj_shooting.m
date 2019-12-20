@@ -1,6 +1,5 @@
 function [f_out] = myobj_shooting(z,tvect,dt,x0,q_exp,params)
-
-%MYOBJ evaluates the objective function of a tracking simulations in the
+%MYOBJ_shooting evaluates the objective function of a tracking simulations in the
 %pendulum test using a shooting approach
 % output:
 %   f_out   = Difference between q_exp (experimental data) and xM (predicted
