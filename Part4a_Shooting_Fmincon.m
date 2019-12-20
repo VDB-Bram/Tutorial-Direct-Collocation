@@ -3,6 +3,7 @@
 % This script explains how you can optimize the daming and baselinetorque
 % to track recorded data of the pendulum test.
 
+clear all; 
 
 %% add functions to the matlab path
 addpath(fullfile(pwd,'functions'));
@@ -70,7 +71,11 @@ disp(['Optimal damping coefficient ' num2str(B) 'Nms']);
 
 
 %% Check simulation results using a forward simulation
-    
+   
+params.Tb = Tb;
+params.B  = B;
+
+
 % Forward integration using time marching
 dt      = 0.005;                    % time step
 tvect   = t_span(1):dt:t_span(2);  % time vector

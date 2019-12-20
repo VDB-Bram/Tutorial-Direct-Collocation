@@ -1,6 +1,8 @@
 
 %% Load pendulum properties (see Part1_Input.m for more information)
 
+clear all;
+
 % Input
 data  = load('DataPendulum.mat');
 q_exp = data.data(:,2)*pi/180;
@@ -99,9 +101,6 @@ J      = sumsqr(qerror);
 opti.minimize(J);
 
 % options for IPOPT
-if exist('options','var')
-    clear options
-end
 options.ipopt.tol = 1*10^(-6);
 options.ipopt.linear_solver = 'mumps';
 options.ipopt.hessian_approximation = 'limited-memory';
