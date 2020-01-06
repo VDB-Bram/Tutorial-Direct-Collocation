@@ -1,55 +1,99 @@
 %% Direct Collocation - fmincon
-clear all
-close all
-clc
+
+% Here we introduce the direct collocation approach to solve the
+% optimization problem.
+
+%% add functions to the matlab path
+addpath(fullfile(pwd,'functions'));
+
+%% Load pendulum properties (see Part1_Input.m for more information)
 
 % Input
 data  = load('DataPendulum.mat');
-t_exp = data.data(:,1);
 q_exp = data.data(:,2)*pi/180;
+t_exp = data.data(:,1);
 
-% f1    = 1;     % first frame of simulation
-% f2    = 501;   % final frame of simulation
-% t_exp = t_exp(f1:f2,:);
-% q_exp = q_exp(f1:f2,:);
+% t_span = [t_exp(1) t_exp(end)]';
+% note use smaller t_span, because this implementation is very slow 
+t_span = [t_exp(1) t_exp(1)+2]';    % simulate 2s
 
-f1 = 1
-f2 = length(t_exp)
-
-t1       = t_exp(f1); 
-t2       = t_exp(f2);  
-tspan    = [t1 t2]';
-N        = length(0:0.01:(t2-t1));
-t        = t_exp(1);
-
-m  = 2.3351;
-lc = 0.2367;
-gv = 9.81; 
+% pendulum properties
+m  = 2.3351;            % mass of the pendulum
+lc = 0.2367;            % distance knee - COM tibia
+gv = 9.81;              % gravitational constant
 RG = lc*0.416;          % Radius of gyration (Winter 2009)
-I  = m*RG*RG + m*lc*lc;
+I  = m*RG*RG + m*lc*lc; % Inertia of lower limb +foot
 
-% Initial State
-q_init = [q_exp(1) 0]'; % initial state [q0 qdot0]
-
-% Qdot for initial guess   
-qdot_exp        = diff(q_exp)/0.01; 
-qdot_exp(end+1) = qdot_exp(end);
-    
-%% Params
-params.N     = N; 
-params.q_exp = q_exp;
+% Params
 params.m     = m;
 params.lc    = lc;
 params.g     = gv;
 params.I     = I;
-params.t     = t; 
 
-%% DC
+% Initial state of the pendulum
+x0 = [q_exp(1); 0];  % [joint angle initial frame  -  zero velocity ]
+
+%% Direct collocation
+
+% Here we used direct collocation to find the find that baseline torque and
+% damping coefficient that track the measured kinematics of the pendulum
+% test. We use the matlab function fmincon to solve the optimization
+% problem.
+    
+% Notes about variables
+% The vector z contains the optimization variables. The first two
+% elements are still the static parameters Tb and B. After this, the joint angles
+% and joint velocities for all the collocation points are stored as well.
+
+% Initial guess damping and baseline torque
+ig(1)         = 0;     % Initial guess Tb
+ig(2)         = 0;     % Initial guess B
+
+% discretisation for collocation
+dt      = 0.01;                    % time step
+tvect   = t_span(1):dt:t_span(2);  % time vector (discretisation)
+N       = length(tvect);           % number of points
+
+% interpolate experimenatal data at discr. time using spline
+qspline = spline(t_exp,q_exp);  % spline fit
+[q_exp,qdot_exp] = SplineEval_ppuval(qspline,tvect,1); % get angles and velocities
+
+% set initial guess
+ig(3:2+N)     = q_exp;  % Initial guess joint angle
+ig(3+N:2+2*N) = qdot_exp;  % Initial gues angular velocity
+
+% linear constraints (empty because we used nonlinear constraint
+A = [];     Aeq= [];
+B = [];     Beq= [];
+
+% Bounds on the optimization variables
+Lb = zeros(size(ig));       Ub = zeros(size(ig));
+Lb(1)       = -10;          Ub(1)       = 10;   % baseline torqu between 0 and 10
+Lb(2)       = -10;          Ub(2)       = 10;   % damping between 0.01 and 10
+Lb(3:end)   = -300;         Ub(3:end)   = 300;    %  angles and angular velocities between -300 and 300 
+
+% constraint on initial state (fixed bound)
+Lb(3)   = x0(1);   Lb(3+N)   = x0(2);       % Upper bound on angles and angular velocity respectively
+Ub(3)   = x0(1);   Ub(3+N)   = x0(2);       % Lower bound on angles and angular velocity respectively
+
+% add additional information to params
+params.N = N;
+params.q_exp = q_exp;
+
+% objective function and constraints equations
+f_obj       = @(z)myobj_DC(z,params);       % objective function 
+f_constr    = @(z)mycon_DC(z,dt,params); % constraints function
+
+% Solve optimization problem using fmincon
+options     = optimoptions('fmincon','MaxFunctionEvaluations',1000000);
+[z, fval ]  = fmincon(f_obj,ig,A,B,Aeq,Beq,Lb,Ub,f_constr,options);
+
+% Notes: information about input for fmincon (see also doc fmincon)
 % [z, fval ] = fmincon(F_hanlde,ig,A,B,Aeq,Beq,Lb,Ub,nonlcon);
-    % z = parameters geoptimaliseerd
-    % fval = uitkomst van minimialisatie
-    % F_handle = functie die geminimaliseerd moet worden (difference
-    % between q and theta(i) ^2
+    % z = optimization parameters
+    % fval = output of the optimization
+    % F_handle = objective function (i.e. difference between measured and
+    % simulation joint angles)
     % ig = initial guess of all paramaters
     % A = Linear equality constraints (vector)
     % B = Linear inequality constraints (vector)
@@ -59,40 +103,12 @@ params.t     = t;
     % Ub = Upper bound of optimized parameters
     % nonlcon = Non linear constraints 
 
-F_hanlde  = @(z)myobj_DC(z,params,t);
-F_hanlde2 = @(z)mycon_DC(z,t1,t2,N,q_init,params);
-options   = optimoptions('fmincon','MaxFunctionEvaluations',1000000);
-
-% Initial Guess
-    % Simulation without optimizing Tb and B as ig for q and qdot
-    params.Tb = 2;
-    params.B  = 0.2;
-    options_ode = odeset('InitialStep',0.01,'MaxStep',0.01); 
-    [tM,qM] = ode23(@qdotfunctie_discretization, tspan, q_init,options_ode, params);
-
-ig(1)         = 0;        % ig(Tb)
-ig(2)         = 0.01;     % ig(B)
-ig(3:2+N)     = qM(:,1);  % ig(q)
-ig(3+N:2+2*N) = qM(:,2);  % ig(qdot)
-
-% Equality constraints 
-A = [];     Aeq= [];
-B = [];     Beq= [];
-
-% Bounds 
-Lb(1)       = 0;            Ub(1)       = 10;
-Lb(2)       = 0.01;         Ub(2)       = 10;
-Lb(3:2+2*N) = -300;         Ub(3:2+2*N) = 300;
-
-% Simulation 
-[z, fval ] = fmincon(F_hanlde,ig,A,B,Aeq,Beq,Lb,Ub,F_hanlde2,options);
-
 %% Plot
 
 figure()
-plot(t_exp,z(3:2+N))
+plot(tvect,z(3:2+N))
 hold on
-plot(t_exp,q_exp, '--k')
+plot(tvect,q_exp, '--k')
 legend({'Q: DC with Fmincon','Q: Experimental'})
 xlabel('Time [s]'); 
 ylabel('Angle [rad]');
